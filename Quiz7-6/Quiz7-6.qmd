@@ -1,0 +1,45 @@
+---
+title: "Quiz7-6"
+format: pdf
+editor: visual
+---
+
+```{r}
+# Set the seed for reproducibility
+set.seed(1)
+
+# Number of observations
+n <- 100
+
+# Independent variables
+race <- sample(c("White", "Black", "Asian", "Hispanic"), size = n, replace = TRUE)
+gender <- sample(c("Male", "Female"), size = n, replace = TRUE)
+
+
+vote_preference <- vector("character", length = n)
+
+for (i in 1:n) {
+  if (race[i] %in% c("White", "Asian")) {
+    
+    vote_preference[i] <- ifelse(runif(1) < 0.7, "Candidate_A", "Candidate_B")
+  } else {
+    # Bias towards Candidate_B
+    vote_preference[i] <- ifelse(runif(1) < 0.7, "Candidate_B", "Candidate_A")
+  }
+  
+  # Gender influence
+  if (gender[i] == "Female") {
+    if (vote_preference[i] == "Candidate_A" && runif(1) < 0.2) {
+      vote_preference[i] <- "Candidate_B"
+    }
+  } else {
+    if (vote_preference[i] == "Candidate_B" && runif(1) < 0.2) {
+      vote_preference[i] <- "Candidate_A"
+    }
+  }
+}
+
+data <- data.frame(race, gender, vote_preference)
+
+head(data)
+```

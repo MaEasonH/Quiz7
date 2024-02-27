@@ -1,0 +1,98 @@
+---
+title: "Quiz7-2"
+format: pdf
+editor: visual
+---
+
+```{r}
+
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("car")) install.packages("car")
+
+library(ggplot2)
+library(dplyr)
+library(car)
+```
+
+```{r}
+set.seed(1) 
+
+n <- 1000 
+
+year_of_construction <- sample(1700:2020, n, replace = TRUE)
+location_zone <- sample(c("Central", "Suburban", "Outskirts"), n, replace = TRUE, prob = c(0.3, 0.5, 0.2))
+building_type <- sample(c("Residential", "Commercial", "Mixed-use"), n, replace = TRUE)
+
+
+number_of_floors <- round(runif(n, min = 1, max = 100) * 
+                            (year_of_construction / 2020)^2 * 
+                            (ifelse(location_zone == "Central", 1.5, 1)) * 
+                            (ifelse(building_type == "Commercial", 1.2, 1)) 
+                          )
+
+
+buildings_df <- data.frame(year_of_construction, location_zone, building_type, number_of_floors)
+
+
+
+
+
+
+
+# 1. Summary Statistics of Number of Floors
+summary(buildings_df$number_of_floors)
+
+# 2. Distribution of Number of Floors
+ggplot(buildings_df, aes(x = number_of_floors)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Number of Floors", x = "Number of Floors", y = "Frequency")
+
+# 3. Year of Construction vs. Number of Floors
+cor(buildings_df$year_of_construction, buildings_df$number_of_floors, use = "complete.obs")
+ggplot(buildings_df, aes(x = year_of_construction, y = number_of_floors)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red") +
+  labs(title = "Year of Construction vs. Number of Floors", x = "Year of Construction", y = "Number of Floors")
+
+# 4. Effect of Location Zone on Number of Floors
+anova_zone <- aov(number_of_floors ~ location_zone, data = buildings_df)
+summary(anova_zone)
+
+# 5. Effect of Building Type on Number of Floors
+anova_type <- aov(number_of_floors ~ building_type, data = buildings_df)
+summary(anova_type)
+
+# 6. Linear Regression Analysis
+lmModel <- lm(number_of_floors ~ year_of_construction + location_zone + building_type, data = buildings_df)
+summary(lmModel)
+
+# 7. Interaction Effects
+lmModel_interactions <- lm(number_of_floors ~ year_of_construction * location_zone + building_type, data = buildings_df)
+summary(lmModel_interactions)
+
+# 8. Model Diagnostics
+par(mfrow = c(2, 2))
+plot(lmModel)
+
+# 9. Predictive Accuracy
+# Splitting the dataset into training (80%) and testing (20%) sets
+set.seed(123)
+training_indices <- sample(1:nrow(buildings_df), 0.8 * nrow(buildings_df))
+training_data <- buildings_df[training_indices, ]
+testing_data <- buildings_df[-training_indices, ]
+
+lmModel_train <- lm(number_of_floors ~ year_of_construction + location_zone + building_type, data = training_data)
+predicted_floors <- predict(lmModel_train, newdata = testing_data)
+
+# Calculate Mean Squared Error (MSE)
+mse <- mean((testing_data$number_of_floors - predicted_floors)^2)
+print(paste("Mean Squared Error:", mse))
+
+# 10. Density Plots by Category (Location Zone)
+ggplot(buildings_df, aes(x = number_of_floors, fill = location_zone)) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Density of Number of Floors by Location Zone", x = "Number of Floors", y = "Density")
+
+```

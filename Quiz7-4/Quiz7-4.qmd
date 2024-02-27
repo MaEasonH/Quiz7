@@ -1,0 +1,58 @@
+---
+title: "Quiz7-4"
+format: pdf
+editor: visual
+---
+```{r}
+
+library(ggplot2)
+set.seed(123) 
+n <- 1000 
+
+year_of_construction <- sample(1700:2020, n, replace = TRUE)
+location_zone <- sample(c("Central", "Suburban", "Outskirts"), n, replace = TRUE, prob = c(0.3, 0.5, 0.2))
+building_type <- sample(c("Residential", "Commercial", "Mixed-use"), n, replace = TRUE)
+
+number_of_floors <- round(runif(n, min = 1, max = 100) * 
+                            (year_of_construction / 2020)^2 * 
+                            (ifelse(location_zone == "Central", 1.5, 1)) * 
+                            (ifelse(building_type == "Commercial", 1.2, 1)) 
+                          )
+
+
+buildings_df <- data.frame(year_of_construction, location_zone, building_type, number_of_floors)
+
+
+head(buildings_df)
+
+ggplot(buildings_df, aes(x = year_of_construction, y = number_of_floors)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +  
+  labs(title = "Relationship Between Year of Construction and Number of Floors",
+       x = "Year of Construction",
+       y = "Number of Floors") +
+  theme_minimal() 
+```
+
+```{r}
+
+if (!require("rstanarm")) install.packages("rstanarm")
+
+
+library(rstanarm)
+
+
+model <- stan_glm(number_of_floors ~ year_of_construction, 
+                  data = buildings_df, 
+                  family = gaussian, # Because we are predicting a continuous outcome
+                  prior = normal(0, 2.5), # Assuming a normal prior with mean 0 and SD 2.5
+                  seed = 123 # Set a seed for reproducibility
+)
+
+# View model summary
+print(summary(model))
+
+# Visualize model results
+plot(model)
+```
+
